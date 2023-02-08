@@ -1,0 +1,59 @@
+import React from "react";
+import { ReactQueryDevtools } from "react-query/devtools";
+import { QueryClient, QueryClientProvider } from "react-query";
+import axios, { AxiosInstance } from "axios";
+import { ToastContainer } from "react-toastify";
+import AuthenticationProvider from "./AuthenticationContext";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: false,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
+
+export type ApplicationContextType = {
+  axiosClient: AxiosInstance;
+  setAxiosToken: (_token: string) => void;
+};
+
+export const ApplicationContext = React.createContext({
+  axiosClient: axios.create(),
+  setAxiosToken: (_token: string) => {
+    return;
+  },
+});
+
+const ApplicationProvider = ({ children }: React.PropsWithChildren) => {
+  const axiosClient = axios.create({
+    baseURL: "http://localhost:3000",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const setAxiosToken = (token: string) => {
+    axiosClient.defaults.headers.common["Authorization"] = token;
+  };
+
+  return (
+    <ApplicationContext.Provider value={{ axiosClient, setAxiosToken }}>
+      <QueryClientProvider client={queryClient} contextSharing>
+        <ReactQueryDevtools initialIsOpen />
+        <ToastContainer />
+        <AuthenticationProvider>{children}</AuthenticationProvider>
+      </QueryClientProvider>
+    </ApplicationContext.Provider>
+  );
+};
+
+export const useApplicationContext = () => {
+  return React.useContext(ApplicationContext);
+};
+
+export default ApplicationProvider;
