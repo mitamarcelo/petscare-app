@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { QueryClient, QueryClientProvider } from "react-query";
 import axios, { AxiosInstance } from "axios";
 import { ToastContainer } from "react-toastify";
-import AuthenticationProvider from "./AuthenticationContext";
+import AuthenticationProvider from "@/context/AuthenticationContext";
+import localStorageConstants from "@/constants/localStorage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,14 +20,10 @@ const queryClient = new QueryClient({
 
 export type ApplicationContextType = {
   axiosClient: AxiosInstance;
-  setAxiosToken: (_token: string) => void;
 };
 
 export const ApplicationContext = React.createContext({
   axiosClient: axios.create(),
-  setAxiosToken: (_token: string) => {
-    return;
-  },
 });
 
 const ApplicationProvider = ({ children }: React.PropsWithChildren) => {
@@ -37,12 +34,8 @@ const ApplicationProvider = ({ children }: React.PropsWithChildren) => {
     },
   });
 
-  const setAxiosToken = (token: string) => {
-    axiosClient.defaults.headers.common["Authorization"] = token;
-  };
-
   return (
-    <ApplicationContext.Provider value={{ axiosClient, setAxiosToken }}>
+    <ApplicationContext.Provider value={{ axiosClient }}>
       <QueryClientProvider client={queryClient} contextSharing>
         <ReactQueryDevtools initialIsOpen />
         <ToastContainer />

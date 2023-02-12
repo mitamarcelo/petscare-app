@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { NextRouter } from "next/router";
 import { useApplicationContext } from "@/context";
 import jwt_decode from "jwt-decode";
 
@@ -51,7 +52,7 @@ export const AuthenticationContext =
   });
 
 const AuthenticationProvider = ({ children }: React.PropsWithChildren) => {
-  const { axiosClient, setAxiosToken } = useApplicationContext();
+  const { axiosClient } = useApplicationContext();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [prevRoute, setPrevRouter] = useState("/");
   const [user, setUser] = useState<User | undefined>(undefined);
@@ -71,7 +72,6 @@ const AuthenticationProvider = ({ children }: React.PropsWithChildren) => {
 
   const getAuthentication = () => {
     const token = getToken();
-    setAxiosToken(token || "");
     setIsAuthenticated(!!token && token.length > 0);
   };
 
@@ -90,7 +90,6 @@ const AuthenticationProvider = ({ children }: React.PropsWithChildren) => {
         const token = response.headers.authorization || "";
         localStorage.setItem(localStorageConstants.accessToken, token);
         setIsAuthenticated(true);
-        setAxiosToken(token);
         success("Usuário autenticado!");
       })
       .catch(({ response }) => {
@@ -104,14 +103,25 @@ const AuthenticationProvider = ({ children }: React.PropsWithChildren) => {
     setPrevRouter("/");
   };
 
-  const logout = async () => {
-    const response = await axiosClient.delete("/logout");
-    if (response.status === 204) {
-      success("Usuário deslogado");
-    } else {
-      error(response.data.detail);
-    }
-    contextLogout();
+  const logout = () => {
+    axiosClient
+      .delete("/logout", {
+        headers: { Authorization: getToken() },
+      })
+      .then((response) => {
+        success("Usuário deslogado");
+      })
+      .catch((err) => {
+        debugger;
+        if (err.response.status === 401) {
+          error("Usuário deslogado");
+        } else {
+          error(err.response.data.detail);
+        }
+      })
+      .finally(() => {
+        contextLogout();
+      });
   };
 
   return (
@@ -134,6 +144,23 @@ const AuthenticationProvider = ({ children }: React.PropsWithChildren) => {
 
 export const useAuthenticationContext = () => {
   return useContext(AuthenticationContext);
+};
+
+export const useAuthenticated = (router: NextRouter) => {
+  const { isAuthenticated, setPrevRouter } = useContext(AuthenticationContext);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      let prevPath = router.pathname;
+      const routerQuery = router.query;
+      Object.keys(routerQuery).forEach((param) => {
+        const replacement = routerQuery[param]?.toString() || "";
+        prevPath = prevPath.replace(`[${param}]`, replacement);
+      });
+      if (!!prevPath) setPrevRouter(prevPath);
+      router.push("/login");
+    }
+  }, [isAuthenticated]);
 };
 
 export default AuthenticationProvider;
