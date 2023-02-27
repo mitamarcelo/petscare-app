@@ -10,7 +10,7 @@ const Header = () => {
         <Navbar.Brand href="/">PetsCare</Navbar.Brand>
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav">
-          <Nav className="me-auto">
+          <Nav className="ms-auto">
             <NavDropdown title={user?.name} id="nav-dropdown">
               <NavDropdown.Item>{user?.email}</NavDropdown.Item>
               <NavDropdown.Divider />

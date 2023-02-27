@@ -6,9 +6,12 @@ import {
 } from "@/context/AuthenticationContext";
 import styles from "@/styles/Login.module.scss";
 import { Form, Button } from "react-bootstrap";
+import queryNames from "@/constants/queryNames";
+import { useQueryClient } from "react-query";
 
 const Login = () => {
   const { login, isAuthenticated, prevRoute } = useAuthenticationContext();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [loginData, setLoginData] = useState<LoginProps>({
     email: "",
@@ -17,6 +20,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      queryClient.invalidateQueries([queryNames.petsIndex]);
       router.push(prevRoute);
     }
   }, [isAuthenticated]);
