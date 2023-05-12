@@ -1,52 +1,21 @@
 import { useQuery } from "react-query";
-import { useApplicationContext } from "@/context";
-import useToastify from "@/hooks/useToastify";
 import queryNames from "@/constants/queryNames";
-import { useAuthenticationContext } from "@/context/AuthenticationContext";
 import { Options, Pet } from "@/types/pets";
+import { useFetch } from "./useFetch";
 
 const usePetsIndexQuery = () => {
-  const { axiosClient } = useApplicationContext();
-  const { getToken, contextLogout } = useAuthenticationContext();
-  const { error } = useToastify();
-
-  const fetchPets = () => {
-    return axiosClient
-      .get("/pets", {
-        headers: { Authorization: getToken() },
-      })
-      .then((response) => {
-        return response.data;
-      })
-      .catch(({ response }) => {
-        error(response.data.details.join(" | "));
-        if (response.status === 401) contextLogout();
-      });
-  };
-
+  const { fetch: fetchPets } = useFetch("/pets");
   return useQuery<Pet[]>(queryNames.petsIndex, fetchPets);
 };
 
 const usePetsOptionsQuery = () => {
-  const { axiosClient } = useApplicationContext();
-  const { getToken, contextLogout } = useAuthenticationContext();
-  const { error } = useToastify();
-
-  const fetchPetsOptions = () => {
-    return axiosClient
-      .get("/pets/options", {
-        headers: { Authorization: getToken() },
-      })
-      .then((response) => {
-        return response.data;
-      })
-      .catch(({ response }) => {
-        error(response.data.details.join(" | "));
-        if (response.status === 401) contextLogout();
-      });
-  };
-
+  const { fetch: fetchPetsOptions } = useFetch("/pets/options");
   return useQuery<Options>(queryNames.petsOptions, fetchPetsOptions);
 };
 
-export { usePetsIndexQuery, usePetsOptionsQuery };
+const usePetQuery = (id: string, enabled: boolean) => {
+  const { fetch: fetchPet } = useFetch(`/pets/${id}`);
+  return useQuery<Pet>([queryNames.getPet, id], fetchPet, { enabled });
+};
+
+export { usePetsIndexQuery, usePetsOptionsQuery, usePetQuery };

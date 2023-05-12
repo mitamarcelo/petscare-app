@@ -1,10 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import DatePicker from "react-datepicker";
-import { Pet } from "@/types/pets";
+import { GenderEnum, Pet, SpeciesEnum } from "@/types/pets";
 import useForm from "@/hooks/useForm";
-import { useApplicationContext } from "@/context";
-import { useAuthenticationContext } from "@/context/AuthenticationContext";
 import useToastify from "@/hooks/useToastify";
 import { useMutation, useQueryClient } from "react-query";
 import queryNames from "@/constants/queryNames";
@@ -12,6 +10,7 @@ import { usePetsOptionsQuery } from "@/hooks/usePetQueries";
 import { registerLocale } from "react-datepicker";
 import ptBr from "date-fns/locale/pt-BR";
 import styles from "@/styles/PetFormModal.module.scss";
+import { usePost } from "@/hooks/usePost";
 
 registerLocale("pt-BR", ptBr);
 
@@ -20,57 +19,29 @@ type PetFormModalProps = {
   onClose: () => void;
 };
 
-const PetFormModal = ({ open, onClose }: PetFormModalProps) => {
-  const SpeciesTranslation: { [key: string]: string } = {
-    dog: "Cachorro",
-    cat: "Gato",
-    other: "Outros",
-  };
-  const GendersTranslation: { [key: string]: string } = {
-    male: "Macho",
-    female: "Femea",
-  };
+const PetFormModal: React.FC<PetFormModalProps> = ({ open, onClose }) => {
   const initialPet: Pet = {
     name: "",
     bio: "",
     gender: "male",
     species: "dog",
     dob: new Date(),
+    procedure_records: [],
     breed: "",
   };
   const { values, handleInputChange, setValues } = useForm<Pet>(initialPet);
   const queryClient = useQueryClient();
-  const { axiosClient } = useApplicationContext();
-  const { getToken } = useAuthenticationContext();
   const { error, success } = useToastify();
   const { data: options, isLoading: optionsLoading } = usePetsOptionsQuery();
-  const translateSpeciesName = (option: string) => {
-    if (Object.keys(SpeciesTranslation).includes(option))
-      return SpeciesTranslation[option];
-
-    return "Desconhecido";
-  };
-
-  const translateGenderName = (option: string) => {
-    if (Object.keys(GendersTranslation).includes(option))
-      return GendersTranslation[option];
-
-    return "Desconhecido";
-  };
 
   const handleDateChange = (date: Date) =>
     setValues((prev) => ({ ...prev, dob: date || new Date() }));
 
-  const createPet = async () => {
-    return await axiosClient.post("/pets", values, {
-      headers: { Authorization: getToken() },
-    });
-  };
+  const { post: createPet } = usePost<Pet>("/pets", values);
 
   const { mutate } = useMutation(createPet, {
     mutationKey: queryNames.createPet,
     onError: () => {
-      debugger;
       error("Ops, houve um erro ao criar o Pet, tente novamente.");
     },
     onSuccess: () => {
@@ -82,6 +53,7 @@ const PetFormModal = ({ open, onClose }: PetFormModalProps) => {
     setValues(initialPet);
     onClose();
   };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     mutate();
@@ -89,7 +61,7 @@ const PetFormModal = ({ open, onClose }: PetFormModalProps) => {
   };
 
   return (
-    <Modal show={open} onHide={handleClose} centered>
+    <Modal show={open} onHide={handleClose} fullscreen>
       <Modal.Header closeButton>Criar Pet</Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body className={styles.modalWrapper}>
@@ -135,7 +107,9 @@ const PetFormModal = ({ open, onClose }: PetFormModalProps) => {
             >
               {!!options &&
                 options.species.map((option) => (
-                  <option value={option}>{translateSpeciesName(option)}</option>
+                  <option key={option} value={option}>
+                    {SpeciesEnum[option]}
+                  </option>
                 ))}
             </Form.Select>
           </Form.Group>
@@ -157,7 +131,9 @@ const PetFormModal = ({ open, onClose }: PetFormModalProps) => {
             >
               {!!options &&
                 options.genders.map((option) => (
-                  <option value={option}>{translateGenderName(option)}</option>
+                  <option key={option} value={option}>
+                    {GenderEnum[option]}
+                  </option>
                 ))}
             </Form.Select>
           </Form.Group>

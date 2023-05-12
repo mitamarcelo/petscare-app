@@ -14,7 +14,7 @@ import PetFormModal from "@/components/PetFormModal";
 import { useQueryClient } from "react-query";
 import queryNames from "@/constants/queryNames";
 
-export default function Home() {
+const Home = () => {
   const router = useRouter();
   const [addPetModalOpen, setAddPetModalOpen] = useState<boolean>(false);
   const { isAuthenticated } = useAuthenticationContext();
@@ -49,7 +49,7 @@ export default function Home() {
     <>
       <Head>
         <title>Pets care app</title>
-        <meta name="description" content="App created by Marcelo Mita" />
+        <meta name="description" content="Pets care home page" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -66,8 +66,8 @@ export default function Home() {
           <Row gy={4}>
             {pets && pets.length > 0 ? (
               pets.map((pet) => (
-                <Col md={6}>
-                  <PetCard key={pet.id} pet={pet} />
+                <Col key={pet.id} md={6}>
+                  <PetCard pet={pet} />
                 </Col>
               ))
             ) : (
@@ -79,4 +79,6 @@ export default function Home() {
       </main>
     </>
   );
-}
+};
+
+export default Home;
