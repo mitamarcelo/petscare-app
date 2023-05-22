@@ -80,7 +80,7 @@ const ProcedureFormModal: React.FC<ProcedureFormModalProps> = ({
   };
 
   return (
-    <Modal show={open} onHide={handleClose} fullscreen static>
+    <Modal show={open} onHide={handleClose} fullscreen >
       <Modal.Header closeButton>
         <Modal.Title>Criar Registro</Modal.Title>
       </Modal.Header>
